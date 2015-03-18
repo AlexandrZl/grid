@@ -27,7 +27,7 @@ class Db
 
 		try {
 			$sql = "CREATE TABLE users (
-				id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, 
+				id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 				name VARCHAR(50) NOT NULL,
 				pass VARCHAR(255) NOT NULL,
 				token VARCHAR(255)
