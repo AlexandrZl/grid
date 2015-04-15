@@ -5,3 +5,8 @@
 	2.2)exist user - error
 	2.3)user already login
 	2.4)user login
+
+
+регистрация /api/registerUser?login=new&pass=111
+вход /api/loginUser?login=new&pass=111
+выйти /api/logout

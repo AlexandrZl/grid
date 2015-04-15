@@ -30,7 +30,8 @@ class Db
 				id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 				name VARCHAR(50) NOT NULL,
 				pass VARCHAR(255) NOT NULL,
-				token VARCHAR(255)
+				token VARCHAR(255),
+				UNIQUE (name)
 			)";
 			$this->connect->exec($sql);
 		}
@@ -70,12 +71,19 @@ class Db
 	{
 		$sql = "INSERT INTO users (name, token, pass) VALUES (:name, :token, :pass)";
 		$q = $this->connect->prepare($sql);
-		$q->execute(array(':name'=>$data['login'], ':token'=>md5(time()), ':pass' => md5($data['pass'])));
+		try {
+			$q->execute(array(':name'=>$data['login'], ':token'=>md5(time()), ':pass' => md5($data['pass'])));
+			echo "New user with name: ".$data['login'];
+		}
+		catch(Exception $e) {
+			echo "User exists";
+		}
 	}
 
 	public function logout()
 	{
 		session_destroy();
+		echo "You logout";
 	}
 
 

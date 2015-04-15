@@ -36,9 +36,6 @@ class App
 
 	protected function login()
 	{
-		$login = $_GET['login'];
-		$pass = $_GET['pass'];
-
 		$data = array(
 			'login' => $_GET['login'],
 			'pass' => $_GET['pass'],
@@ -50,9 +47,6 @@ class App
 
 	protected function register()
 	{
-		$login = $_GET['login'];
-		$pass = $_GET['pass'];
-
 		$data = array(
 			'login' => $_GET['login'],
 			'pass' => $_GET['pass'],
