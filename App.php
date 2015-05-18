@@ -31,6 +31,12 @@ class App
 			if ($value[0] == "logout") {
 				return $this->logout();
 			}
+            if ($value[0] == "getTask") {
+                return $this->getTask();
+            }
+            if ($value[0] == "resolveTask") {
+                return $this->resolveTask();
+            }
 		}
 	}
 
@@ -40,10 +46,41 @@ class App
 			'login' => $_GET['login'],
 			'pass' => $_GET['pass'],
 		);
-
 		$db = new Db();
 		$db->login($data);
 	}
+
+    protected function getTask()
+    {
+        $data = array(
+            'task' => $_GET['task'],
+        );
+        $db = new Db();
+        if (User::hasIdentity()) {
+            echo $db->getTask($data);
+        } else {
+            echo 'You are not logined';
+        }
+    }
+
+    protected function resolveTask()
+    {
+        $data = array(
+            'task' => $_GET['task'],
+            'answer' => $_GET['answer'],
+        );
+        $db = new Db();
+        if (User::hasIdentity()) {
+            $task = $db->resolveTask($data);
+            if (isset($task['exist'])) {
+                echo $task['status'];
+            } else {
+                echo $task['task'];
+            }
+        } else {
+            echo 'You are not logined';
+        }
+    }
 
 	protected function register()
 	{

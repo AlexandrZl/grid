@@ -7,7 +7,6 @@ class Db
 
 	public function __construct()
 	{
-		session_start(); 
 		$this->config = include 'autoload/local.php';
 		$this->connect();
 	}
@@ -37,9 +36,58 @@ class Db
 		}
 		catch(PDOException $e)
 		{
-			return;
 		}
+        try {
+            $sql = "CREATE TABLE tasks (
+				id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+				task VARCHAR(50) NOT NULL,
+				response VARCHAR(255) NOT NULL
+			)";
+            $this->connect->exec($sql);
+        }
+        catch(PDOException $e)
+        {
+            return;
+        }
 	}
+
+    public function getTask($data)
+    {
+        $sql = $this->connect->prepare("select * from tasks where id = :id");
+        $sql->execute(array(
+            ':id' => $data['task'],
+        ));
+        $task = $sql->fetch();
+
+        if($task) {
+            $response = $task['task'];
+        } else {
+            $response = "This task don't exist";
+        }
+        return $response;
+    }
+
+    public function resolveTask($data)
+    {
+        $sql = $this->connect->prepare("select * from tasks where id = :id");
+        $sql->execute(array(
+            ':id' => $data['task'],
+        ));
+        $task = $sql->fetch();
+
+        if($task) {
+            $response['task'] = $task['task'];
+            if ($task['response'] == $data['answer']) {
+                $response['status'] = "Right";
+                $response['exist'] = true;
+            } else {
+                $response['status'] = "Wrong";
+            }
+        } else {
+            $response['task'] = "This task don't exist";
+        }
+        return $response;
+    }
 
 	public function login($login)
 	{
@@ -82,9 +130,8 @@ class Db
 
 	public function logout()
 	{
-		session_destroy();
-		echo "You logout";
+        session_destroy();
+        $_SESSION = null;
+        echo "You logout";
 	}
-
-
 }
