@@ -1,6 +1,3 @@
 
-регистрация /registerUser?login=new&pass=111
-вход /loginUser?login=new&pass=111
-выйти /logout
-выдача задач /getTask
-провериить ответ /resolveTask?id=2&answer=4
+/start
+/runTask

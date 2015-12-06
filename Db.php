@@ -7,7 +7,7 @@ class Db
 
 	public function __construct()
 	{
-		$this->config = include 'autoload/local.php';
+		$this->config = include 'autoload/global.php';
 		$this->connect();
 	}
 
@@ -22,138 +22,92 @@ class Db
 		catch(PDOException $e)
 		    {
 		    }
-
-		try {
-			$sql = "CREATE TABLE user (
-				id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-				name VARCHAR(50) NOT NULL,
-				pass VARCHAR(255) NOT NULL,
-				token VARCHAR(255),
-				UNIQUE (name)
-			)";
-			$this->connect->exec($sql);
-		}
-		catch(PDOException $e)
-		{
-		}
         try {
             $sql = "CREATE TABLE task (
-				id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-				task VARCHAR(50) NOT NULL,
-				response VARCHAR(255) NOT NULL
-			)";
+				id INT(6) AUTO_INCREMENT PRIMARY KEY,
+				status BOOLEAN NULL DEFAULT FALSE,
+				inProgress BOOLEAN NULL DEFAULT FALSE,
+				end_time int(11) NULL
+			)ENGINE=INNODB";
             $this->connect->exec($sql);
         }
         catch(PDOException $e)
         {
         }
+
         try {
-            $sql ="CREATE TABLE user_task (
-             id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-             user INT ( 6 ) NOT NULL,
-             task INT ( 6 ) NOT NULL)";
+            $sql = "CREATE TABLE node (
+				id INT(6) AUTO_INCREMENT PRIMARY KEY,
+				status BOOLEAN NULL DEFAULT FALSE,
+				ready BOOLEAN NULL DEFAULT TRUE,
+				task_id int(3) NULL,
+				fault_tolerance int(11) NULL,
+				INDEX task_id (task_id),
+				FOREIGN KEY (task_id) REFERENCES task(id)
+			)ENGINE=INNODB";
             $this->connect->exec($sql);
-        } catch(PDOException $e)
-        {
         }
-
-        try {
-            $sql = "INSERT INTO task (id, task, response) VALUES
-            (1, '1+1', '2'),
-            (2, '2+2', '4')";
-
-            $this->connect->exec($sql);
-        } catch(PDOException $e)
+        catch(PDOException $e)
         {
         }
 	}
 
-    public function getAllTask()
-    {
-        $sql = $this->connect->prepare("select * from task");
+    public function createNode() {
+        $faultTolerance = rand(30, 99);
+        $sql = "INSERT INTO node (id, status, task_id, fault_tolerance) VALUES ('', true, null, $faultTolerance)";
+        $this->connect->exec($sql);
+
+        $sql = "SELECT LAST_INSERT_ID()";
+        $sql = $this->connect->prepare($sql);
         $sql->execute();
-        $task = $sql->fetchAll();
-
-        return $task;
     }
 
-    public function getResolveTaskByUser($id)
-    {
-        $sql = $this->connect->prepare("select * from user_task where user = :id");
-        $sql->execute(array(
-            ':id' => $id,
-        ));
-        $resolveTask = $sql->fetchAll();
-
-        return $resolveTask;
+    public function generateTask() {
+        $sql = "INSERT INTO task (id, status) VALUES ('', false)";
+        $this->connect->exec($sql);
     }
 
-    public function isResolvedTask($userId, $taskId)
-    {
-        $sql = $this->connect->prepare("select * from user_task where user = :userId AND task = :taskId");
-        $sql->execute(array(
-            ':userId' => $userId,
-            ':taskId' => $taskId
-        ));
-        $resolvedTask = $sql->fetch();
-
-        return $resolvedTask;
+    public function getTaskId() {
+        $id = $this->connect->lastInsertId();
+        return $id;
     }
 
-    public function findTaskById($id)
-    {
-        $sql = $this->connect->prepare("select * from task where id = :id");
-        $sql->execute(array(
-            ':id' => $id
-        ));
+    public function findFreeNode() {
+        $sql = $this->connect->prepare("select * from node where ready = 1");
+        $sql->execute();
+        $node = $sql->fetch();
+
+        return $node;
+    }
+
+    public function findFreeTask() {
+        $sql = $this->connect->prepare("select * from task where status = 0 and inProgress = 0");
+        $sql->execute();
         $task = $sql->fetch();
 
         return $task;
     }
 
-	public function login($login)
-	{
-		$sql = $this->connect->prepare("select * from user where name = :name and pass = :pass");
-		$sql->execute(array(
-			':name' => $login['login'],
-			':pass' => md5($login['pass']),
-		));
-		$user = $sql->fetch();
+    public function runTaskForNode($idNode, $idTask) {
+        $sql = $this->connect->prepare("UPDATE node SET ready = :ready, task_id = :idTask WHERE id = :id");
 
-		return $user;
-	}
-
-    public function taskResolved($userId, $taskId)
-    {
-        $sql = "INSERT INTO user_task (user, task) VALUES (:userId, :taskId)";
-        $q = $this->connect->prepare($sql);
-        try {
-            $q->execute(array(':userId'=> $userId, ':taskId' => $taskId ));
-            $result = true;
-        }
-        catch(Exception $e) {
-            $result = false;
-        }
-        return $result;
+        $sql->execute(array(
+            ':ready' => 0,
+            ':idTask' => $idTask,
+            ':id' => $idNode
+        ));
+        $sql->execute();
     }
 
-	public function create($data)
-	{
-		$sql = "INSERT INTO user (name, token, pass) VALUES (:name, :token, :pass)";
-		$q = $this->connect->prepare($sql);
-		try {
-			$q->execute(array(':name'=>$data['login'], ':token'=>md5(time()), ':pass' => md5($data['pass'])));
-            $result = true;
-		}
-		catch(Exception $e) {
-            $result = false;
-		}
-        return $result;
-	}
+    public function inProgressTask($id) {
+        $sql = $this->connect->prepare("UPDATE task SET inProgress = :inProgress, end_time = :end_time WHERE id = :id");
 
-	public function logout()
-	{
-        session_destroy();
-        $_SESSION = null;
-	}
+        $sql->execute(array(
+            ':inProgress' => 1,
+            ':end_time' => time(),
+            ':id' => $id
+        ));
+        $sql->execute();
+    }
+
 }

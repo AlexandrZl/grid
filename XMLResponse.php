@@ -4,8 +4,7 @@ class XMLResponse
 {
     public function out($message)
     {
-        header('Content-Type: text/xml');
-        echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        header('Content-Type: text/json');
 
         echo "<response>\n";
         if($message) {
