@@ -50,6 +50,18 @@ class Db
         catch(PDOException $e)
         {
         }
+
+        try {
+            $sql = "CREATE TABLE client (
+				id INT(6) AUTO_INCREMENT PRIMARY KEY,
+				status BOOLEAN NULL DEFAULT FALSE,
+				hash VARCHAR(100) NULL
+			)ENGINE=INNODB";
+            $this->connect->exec($sql);
+        }
+        catch(PDOException $e)
+        {
+        }
 	}
 
     public function createNode() {
@@ -110,4 +122,35 @@ class Db
         $sql->execute();
     }
 
+    public function createClient(){
+        $hash = hash(md5, time());
+        $sql = "INSERT INTO client (id, status, hash) VALUES ('', true, '$hash')";
+        $this->connect->exec($sql);
+
+        return $hash;
+    }
+
+    public function findByHash($hash){
+        $sql = $this->connect->prepare("select * from client where hash = '$hash' and status = 1");
+        $sql->execute();
+        $client = $sql->fetch();
+
+        return $client ? true : false;
+    }
+
+    public function findByIdTask($id){
+        $sql = $this->connect->prepare("select * from task where id = '$id'");
+        $sql->execute();
+        $task = $sql->fetch();
+
+        return $task ? $task : false;
+    }
+
+    public function clinedFindById($id){
+        $sql = $this->connect->prepare("select * from client where id = '$id'");
+        $sql->execute();
+        $client = $sql->fetch();
+
+        return $client ? $client : false;
+    }
 }

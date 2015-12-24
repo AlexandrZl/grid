@@ -27,4 +27,8 @@ class Task
         return $this->db->inProgressTask($id);
     }
 
+    public function findById($id){
+        return $this->db->findByIdTask($id);
+    }
+
 }

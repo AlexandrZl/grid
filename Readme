@@ -1,3 +1,5 @@
 
 /start
 /runTask
+/getTask?task=1
+/clientInfo?client=1
